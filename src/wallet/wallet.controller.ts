@@ -1,4 +1,4 @@
-import { Controller, Post, HttpCode, HttpStatus, UseGuards, Body } from '@nestjs/common';
+import { Controller, Post, HttpCode, HttpStatus, UseGuards, Body, Get } from '@nestjs/common';
 import { WalletService } from './wallet.service';
 import { JwtAuthGuard } from '../auth/guard/jwt-auth-guard';
 import { CurrentUser } from '../auth/decorator/current-user';
@@ -12,7 +12,14 @@ export class WalletController {
     private readonly walletService: WalletService
   ){}
 
-  
+  @UseGuards(JwtAuthGuard)
+  @Get("wallet")
+  @HttpCode(HttpStatus.OK)
+  async getProfile(@CurrentUser() user){
+    const result = await this.walletService.getWalletByUserId(user.id)
+    return  result;
+  }
+
   @UseGuards(JwtAuthGuard)
   @Post("new-wallet")
   @HttpCode(HttpStatus.CREATED)

@@ -136,6 +136,7 @@ async fundWallet(userId: string, data: FundWalletDTO) {
           reference,
           description: 'Wallet funding via external source',
           status: 'COMPLETED',
+          userId
         },
       });
 
@@ -208,6 +209,7 @@ async transferFunds(
 
     const senderTransaction = await tx.transaction.create({
       data: {
+        userId: senderUserId,
         walletId: senderWallet.id,
         type: "TRANSFER",
         amount: data.amount,
@@ -233,6 +235,7 @@ async transferFunds(
           data.description ||
           `Transfer from user ${senderUserId}`,
         status: "COMPLETED",
+        userId: recipientWallet.userId,
         metadata: {
           senderWalletId: senderWallet.id,
         },

@@ -11,5 +11,5 @@ export class TransferFundsDTO {
   amount: number;
 
   @IsString()
-  description?: string;
+  description: string;
 }
