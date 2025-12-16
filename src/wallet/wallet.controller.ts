@@ -3,6 +3,7 @@ import { WalletService } from './wallet.service';
 import { JwtAuthGuard } from '../auth/guard/jwt-auth-guard';
 import { CurrentUser } from '../auth/decorator/current-user';
 import { FundWalletDTO } from './dto';
+import { TransferFundsDTO } from './dto/transfer.dto';
 
 
 @Controller('wallet')
@@ -30,6 +31,17 @@ export class WalletController {
     @Body() data: FundWalletDTO
   ){
     const result = await this.walletService.fundWallet(user.id, data)
+    return  result;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post("transfer")
+  @HttpCode(HttpStatus.CREATED)
+  async transferFund(
+    @CurrentUser() user,
+    @Body() data: TransferFundsDTO
+  ){
+    const result = await this.walletService.transferFunds(user.id, data)
     return  result;
   }
 }

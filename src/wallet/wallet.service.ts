@@ -1,10 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { generateUniqueAccountNumber } from '../utils/uniqueIdGenerator'
 import { DuplicateReferenceError, InsufficientFundsError, NotFoundError} from "../utils/errors";
 import logger from "../utils/logger";
 import { randomBytes } from 'crypto';
 import {FundWalletDTO, TransactionStatus, TransactionType } from './dto';
+import { FORBIDDEN_MESSAGE } from '@nestjs/core/guards';
+import { TransferFundsDTO } from './dto/transfer.dto';
 
 @Injectable()
 export class WalletService {
@@ -21,7 +23,7 @@ export class WalletService {
     })
 
     if(!wallet){
-      throw new NotFoundError("Wallet not found")
+      throw new BadRequestException("Wallet not found")
     }
 
     return wallet;
@@ -104,7 +106,7 @@ async fundWallet(userId: string, data: FundWalletDTO) {
       }
 
       if(data.amount <= 0){
-        throw new Error("Invalid amount provided.")
+        throw new BadRequestException("Invalid amount provided.")
       }
       
       const wallet = await tx.wallet.findFirst({
@@ -157,6 +159,90 @@ async fundWallet(userId: string, data: FundWalletDTO) {
     throw new Error('Failed to fund wallet');
   }
 }
+
+async transferFunds(
+  senderUserId: string,
+  data: TransferFundsDTO,
+) {
+  return this.prisma.$transaction(async (tx) => {
+    const senderWallet = await tx.wallet.findUnique({
+      where: { userId: senderUserId },
+    });
+
+    if (!senderWallet) {
+      throw new NotFoundError('Sender wallet not found');
+    }
+
+    const recipientWallet = await tx.wallet.findUnique({
+      where: { wallet_token: data.wallet_token },
+    });
+
+    if (!recipientWallet) {
+      throw new NotFoundError('Recipient wallet not found');
+    }
+
+    if (senderWallet.id === recipientWallet.id) {
+      throw new Error("You can't transfer to yourself");
+    }
+
+    if (Number(senderWallet.balance) < data.amount) {
+      throw new InsufficientFundsError();
+    }
+
+    const reference = this.generateTransactionId();
+    const creditReference = `${reference}_CREDIT`;
+
+    await tx.wallet.update({
+      where: { id: senderWallet.id },
+      data: {
+        balance: { decrement: data.amount },
+      },
+    });
+
+    await tx.wallet.update({
+      where: { id: recipientWallet.id },
+      data: {
+        balance: { increment: data.amount },
+      },
+    });
+
+    const senderTransaction = await tx.transaction.create({
+      data: {
+        walletId: senderWallet.id,
+        type: "TRANSFER",
+        amount: data.amount,
+        reference,
+        description:
+          data.description ||
+          `Transfer to ${recipientWallet.account_name ?? recipientWallet.wallet_token}`,
+        recipientWalletId: recipientWallet.id,
+        status:"COMPLETED",
+        metadata: {
+          recipientWalletId: recipientWallet.id,
+        },
+      },
+    });
+
+    await tx.transaction.create({
+      data: {
+        walletId: recipientWallet.id,
+        type: "CREDIT",
+        amount: data.amount,
+        reference: creditReference,
+        description:
+          data.description ||
+          `Transfer from user ${senderUserId}`,
+        status: "COMPLETED",
+        metadata: {
+          senderWalletId: senderWallet.id,
+        },
+      },
+    });
+
+    return {senderTransaction, message:"Fund transfered successfully",};
+  });
+}
+
 
   
   generateTransactionId = (): string => {
