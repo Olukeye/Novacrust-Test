@@ -101,4 +101,20 @@ export class AuthService {
     return this.jwt.sign(payload);
   }
 
+    async getUserById(userId:string){
+     const user = await this.prisma.user.findFirst({
+       where: {id: userId}
+     })
+ 
+     if(!user){
+       throw new NotFoundException("Email does not exist")
+     }
+     const { password, 
+       createdAt, 
+       updatedAt, 
+       ...sanitizedUser 
+     } = user;
+ 
+     return sanitizedUser
+   }
 }
