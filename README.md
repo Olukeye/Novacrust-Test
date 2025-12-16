@@ -198,7 +198,29 @@ Response: 200 OK
   }
 }
 ```
+#### 3. Create Wallet
+```http
+POST /wallets/transfer
+Authorization: Bearer <token>
+Content-Type: application/json
 
+Response: 200 OK
+{
+	"success": true,
+	"message": "Request successful",
+	"data": {
+		"id": "8f9216ea-5bd9-4b88-a2bf-15bafea01eaa",
+		"userId": "a11c4059-de20-44d1-a316-693e1df15083",
+		"balance": "0",
+		"currency": "USD",
+		"account_name": "Wale oshman",
+		"wallet_token": "2640568031",
+		"createdAt": "2025-12-16T08:48:36.454Z",
+		"updatedAt": "2025-12-16T08:48:36.454Z"
+	},
+	"timestamp": "2025-12-16T08:48:36.468Z"
+}
+```
 #### 5. Get Wallet Infor
 Response: 200 OK
 {
@@ -217,6 +239,29 @@ Response: 200 OK
 ```
 
 #### 6. Get Transaction History
+```http
+GET /wallets/wallet
+Authorization: Bearer <token>
+
+Response: 200 OK
+{
+	"success": true,
+	"message": "Request successful",
+	"data": {
+		"id": "8f9216ea-5bd9-4b88-a2bf-15bafea01eaa",
+		"userId": "a11c4059-de20-44d1-a316-693e1df15083",
+		"balance": "300",
+		"currency": "USD",
+		"account_name": "Wale oshman",
+		"wallet_token": "2640568031",
+		"createdAt": "2025-12-16T08:48:36.454Z",
+		"updatedAt": "2025-12-16T08:48:36.454Z"
+	},
+	"timestamp": "2025-12-16T12:15:02.281Z"
+}
+```
+
+#### 7. Get Transaction History
 ```http
 GET /wallets/transactions
 Authorization: Bearer <token>
