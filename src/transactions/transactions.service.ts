@@ -3,9 +3,9 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class TransactionsService {
-    constructor(
-      private prisma:PrismaService,
-    ){}
+  constructor(
+    private prisma:PrismaService,
+  ){}
 
  async getTransactionHistory(
   userId: string,

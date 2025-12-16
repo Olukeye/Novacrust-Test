@@ -161,10 +161,7 @@ async fundWallet(userId: string, data: FundWalletDTO) {
   }
 }
 
-async transferFunds(
-  senderUserId: string,
-  data: TransferFundsDTO,
-) {
+async transferFunds( senderUserId: string, data: TransferFundsDTO) {
   return this.prisma.$transaction(async (tx) => {
     const senderWallet = await tx.wallet.findUnique({
       where: { userId: senderUserId },
@@ -244,10 +241,9 @@ async transferFunds(
 
     return {senderTransaction, message:"Fund transfered successfully",};
   });
-}
+  }
 
 
-  
   generateTransactionId = (): string => {
     const timestamp = Date.now().toString(36);
     const randomString = randomBytes(7).toString('base64').replace(/\W/g, ''); // Generate a random 3-byte base64 string and remove non-alphanumeric characters
